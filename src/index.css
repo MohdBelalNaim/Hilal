@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  background-color: #f4f6fc;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+.bg-primary {
+  background-color: dodgerblue;
+  color: white;
+}
+p {
+  margin: initial;
+  margin-bottom: 10px;
+}
+.primary {
+  color: dodgerblue;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.border-primary {
+  border: 1px solid dodgerblue;
+}
+
+.active-menu {
+  border-bottom: 4px solid dodgerblue;
+}
+
+.glass {
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(4.5px);
+  -webkit-backdrop-filter: blur(4.5px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.comment-mobile {
+  display: none;
+}
+.card-bottom {
+  border-radius: 0px 0px 6px 6px;
+}
+@media only screen and (max-width: 600px) {
+  .comment-mobile {
+    display: flex;
+  }
+}
