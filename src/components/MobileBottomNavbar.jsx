@@ -18,7 +18,8 @@ const MobileBottomNavbar = () => {
       pathname == "/signup/photo" ||
       pathname == "/signup/final" ||
       pathname == "/" ||
-      pathname.includes("/post-details/")
+      pathname.includes("/post-details/") ||
+      pathname.includes("/chat/")
     ) {
       setShow(false);
     } else {
