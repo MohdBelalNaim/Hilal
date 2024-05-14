@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   BsAspectRatio,
   BsImage,
@@ -17,6 +17,7 @@ import "@mdxeditor/editor/style.css";
 
 import { toast } from "sonner";
 import { LuRectangleHorizontal, LuRectangleVertical } from "react-icons/lu";
+import { TailSpin } from "react-loader-spinner";
 const CreatePost = () => {
   const dispatch = useDispatch();
   const [uploadImage, setUploadImage] = useState(null);
@@ -29,6 +30,7 @@ const CreatePost = () => {
   const [croppedImage, setCroppedImage] = useState(null);
   const [aspect, setAspect] = useState(1 / 1);
   const [aspectMenu, setAspectMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
   const editorRef = useRef("");
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
@@ -40,24 +42,22 @@ const CreatePost = () => {
     console.log(editorRef.current.getMarkdown());
   }
 
-  const showCroppedImage = useCallback(async () => {
+  const handelSave = useCallback(async () => {
     try {
-      const croppedImage = await getCroppedImg(
+      const { file } = await getCroppedImg(
         URL.createObjectURL(uploadImage),
         croppedAreaPixels,
         rotation
       );
-      console.log("donee", { croppedImage });
-      setCroppedImage(croppedImage);
+      await savePost(file);
     } catch (e) {
       console.error(e);
     }
   }, [croppedAreaPixels, rotation, uploadImage]);
 
-  const saveImage = async () => {
-    if (uploadImage == "" || uploadImage == null) return "";
+  const saveImage = async (file) => {
     const data = new FormData();
-    data.append("file", uploadImage);
+    data.append("file", file);
     data.append("upload_preset", "hilal_link");
     data.append("cloud_name", "myimagestorage");
 
@@ -78,11 +78,12 @@ const CreatePost = () => {
   };
 
   const base = useSelector((state) => state.userSlice.base_url);
-  async function savePost() {
-    if (text=="" || !uploadImage=="") {
+  async function savePost(imgfile) {
+    if (text == "" && uploadImage == "") {
       toast.error("Post cannot be empty!");
       return;
     }
+    setLoading(true);
     await fetch(`${base}/post/create`, {
       method: "POST",
       headers: {
@@ -92,7 +93,7 @@ const CreatePost = () => {
       body: JSON.stringify({
         text,
         post_type: uploadImage ? "Media" : "Text",
-        asset_url: await saveImage(),
+        asset_url: await saveImage(imgfile),
       }),
     })
       .then((res) => res.json())
@@ -100,8 +101,10 @@ const CreatePost = () => {
         if (data.success) {
           toast.success(data.success);
           dispatch(hideCreate());
+          setLoading(false);
         } else {
           toast.error(data.error);
+          setLoading(false);
         }
       });
   }
@@ -224,14 +227,6 @@ const CreatePost = () => {
           Crop
         </button> */}
 
-        <div className="cropped-image-container">
-          {croppedImage && (
-            <img className="cropped-image" src={croppedImage} alt="cropped" />
-          )}
-          {croppedImage && (
-            <button onClick={() => setCroppedImage(false)}>close</button>
-          )}
-        </div>
         <div className="border-t flex items-center justify-between p-4">
           <div className="flex text-lg items-center gap-3 text-gray-500">
             <span className="text-sm">Add</span>
@@ -248,12 +243,22 @@ const CreatePost = () => {
             <BsThreeDots className="text-blue-500" />
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={savePost}
-              className="bg-primary text-sm py-1 px-4 rounded-full max-sm:text-xs"
-            >
-              Post
-            </button>
+            {loading ? (
+              <button
+                onClick={savePost}
+                className="bg-primary text-sm w-max py-1 rounded-full max-sm:text-xs opacity-55 cursor-not-allowed"
+                disabled
+              >
+                <TailSpin height={20} color="white" />
+              </button>
+            ) : (
+              <button
+                onClick={handelSave}
+                className="bg-primary text-sm py-1 px-4 rounded-full max-sm:text-xs"
+              >
+                Post
+              </button>
+            )}
           </div>
         </div>
       </div>
