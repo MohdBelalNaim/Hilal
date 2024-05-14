@@ -41,7 +41,7 @@ const Chat = () => {
       setMessages((prev) => [...prev, newMessage]);
     });
     return () => {
-      socket.close();
+      socket.disconnect();
     };
   }, []);
 
