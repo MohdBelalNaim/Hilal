@@ -23,7 +23,12 @@ import avatar from "../assets/images/avatar.jpeg";
 import { RWebShare } from "react-web-share";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import moment from "moment";
+
+import { FaShare } from "react-icons/fa";
+import { toast } from "sonner";
+
 
 const PostCard = ({ data }) => {
   const base = useSelector((state) => state.userSlice.base_url);
@@ -32,8 +37,10 @@ const PostCard = ({ data }) => {
   const [liked, setLiked] = useState(false);
   const [options, setOptions] = useState(false);
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
+
   const [date, setDate] = useState([]);
-  
+  const [hide, setHide] = useState(false);
+
   function addLike() {
     setLiked(true);
     fetch(`${base}/post/add-like/${data?._id}`, {
@@ -86,6 +93,20 @@ const PostCard = ({ data }) => {
     });
   }
 
+  function deletePost(id) {
+  let confirmation = confirm("Are you sure you want to delete this Post?");
+  if (confirmation) {
+    fetch(`${base}/post/delete/${id}`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setHide(true));
+  }
+  }
+
   useEffect(() => {
     if (data?.likes?.includes(my?._id)) {
       setLiked(true);
@@ -102,6 +123,7 @@ const PostCard = ({ data }) => {
         className=" mb-5 relative max-sm:mb-2"
         style={{ borderRadius: 10 + "px" }}
       >
+      <div className={`${hide && "hidden"} relative`}>
         {options && (
           <div
             className="bg-white overflow-hidden z-[99] absolute text-sm border shadow rounded-md right-2 top-14"
@@ -109,10 +131,19 @@ const PostCard = ({ data }) => {
           >
             {data?.user?._id == my?._id ? (
               <>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                <Link to={`/edit/${data?._id}`}>
+                <div 
+                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  // onClick={() => editPost(data?._id)}
+                >
                   <BsPen /> Edit post
                 </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                </Link>
+                
+                <div 
+                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  onClick={() => deletePost(data?._id)}
+                >
                   <BsTrash /> Delete post
                 </div>
                 <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
@@ -261,6 +292,7 @@ const PostCard = ({ data }) => {
           >
             <BsShare className="max-sm:text-xs" />
           </RWebShare>
+        </div>
         </div>
       </div>
     </>
