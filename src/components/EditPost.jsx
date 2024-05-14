@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   BsAspectRatio,
   BsImage,
@@ -31,26 +31,25 @@ const EditPost = () => {
   const [aspect, setAspect] = useState(1 / 1);
   const [aspectMenu, setAspectMenu] = useState(false);
   const editorRef = useRef("");
-  const id = useParams()
-  const [post, setPost] = useState()
+  const id = useParams();
+  const [post, setPost] = useState();
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   useEffect(() => {
-    fetch(`${base}post/post-by-id/${id}`,{
-        method:"POST",
-        headers: {
+    fetch(`${base}post/post-by-id/${id}`, {
+      method: "POST",
+      headers: {
         authorization: "Bearer " + localStorage.getItem("token"),
       },
-    }).then((res)=> res.json())
-    .then((data)=>{
-        setPost(data.data)
-        setText(data.data.text); 
     })
-    
-    
+      .then((res) => res.json())
+      .then((data) => {
+        setPost(data.data);
+        setText(data.data.text);
+      });
   }, []);
 
   function handleChange() {
@@ -66,7 +65,6 @@ const EditPost = () => {
         rotation
       );
       console.log("donee", { croppedImage });
-      setCroppedImage(croppedImage);
     } catch (e) {
       console.error(e);
     }
@@ -160,7 +158,7 @@ const EditPost = () => {
             </div>
           </div>
 
-        <MDXEditor
+          <MDXEditor
             name="Text"
             onChange={handleChange}
             ref={editorRef}
@@ -278,6 +276,7 @@ const EditPost = () => {
             >
               Post
             </button>
+            <button onClick={showCroppedImage}>show</button>
           </div>
         </div>
       </div>
