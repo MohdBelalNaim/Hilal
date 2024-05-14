@@ -17,56 +17,22 @@ import {
 } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { showDetails } from "../redux/toggleSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { MdBlock } from "react-icons/md";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import avatar from "../assets/images/avatar.jpeg";
-import { PiPaperPlaneRight } from "react-icons/pi";
 import { RWebShare } from "react-web-share";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { FaShare } from "react-icons/fa";
+import moment from "moment";
 
-const PostCard = ({ index, data, text }) => {
-  const dispatch = useDispatch();
+const PostCard = ({ data }) => {
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
 
-  const addComment = () => {
-    fetch(`${base}/post/add-comment/${data._id}`, {
-      method: "PUT",
-      headers: {
-        authorization: "Bearer " + localStorage.getItem("token"),
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ comment }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        getdetails();
-      });
-  };
-  const createPost = useSelector((state) => state.toggleSlice.createPost);
   const [liked, setLiked] = useState(false);
-  const [comment, setComment] = useState("");
   const [options, setOptions] = useState(false);
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
-  function getdetails() {
-    fetch(`${base}/post/post-by-id/${data?._id}`, {
-      method: "POST",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        dispatch(showDetails(data?.data));
-        console.log(data?.data);
-        setComment("");
-      });
-  }
+  const [date, setDate] = useState([]);
   function addLike() {
     setLiked(true);
     fetch(`${base}/post/add-like/${data?._id}`, {
@@ -118,6 +84,9 @@ const PostCard = ({ index, data, text }) => {
     } else {
       setLiked(false);
     }
+  }, []);
+  useEffect(() => {
+    setDate(moment(data?.date).fromNow());
   }, []);
   return (
     <>
@@ -200,7 +169,7 @@ const PostCard = ({ index, data, text }) => {
           </Link>
           <div className="flex text-xs items-center gap-3 text-gray-500">
             {/* 6 Jan 2022{" "} */}
-            <span className="font-normal text-gray-600 text-xs">2d </span>
+            <span className="font-normal text-gray-600 text-xs">{date} </span>
             <BsThreeDots
               onClick={() => setOptions(!options)}
               className="cursor-pointer max-sm:text-xs"
@@ -259,14 +228,14 @@ const PostCard = ({ index, data, text }) => {
                 </div>
               </div>
             </Link>
-            
+
             {/* <Link to={`/repost/${data?._id}`}> */}
-            <div  className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer">
+            <div className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer">
               <BsRepeat size={18} />
               <div className="text-xs max-sm:text-[11px]">0</div>
             </div>
             {/* </Link> */}
-            
+
             <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
               <BsEye size={18} />
 
@@ -291,5 +260,3 @@ const PostCard = ({ index, data, text }) => {
 };
 
 export default PostCard;
-
-

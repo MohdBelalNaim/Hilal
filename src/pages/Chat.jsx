@@ -21,7 +21,7 @@ const Chat = () => {
       current.scrollIntoView({ behavior: "smooth" });
     }
   };
-  const socket = io(base);
+  const socket =  io(base);
  
   useEffect(scrollToElement, [messages]);
 
