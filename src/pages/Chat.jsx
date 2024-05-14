@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import CompactSidebar from "../components/CompactSidebar";
-import { LuSend } from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import avatar from "../assets/images/avatar.jpeg";
 import { io } from "socket.io-client";
+import { FaPaperPlane } from "react-icons/fa";
 
 const Chat = () => {
   const { id } = useParams();
@@ -13,13 +13,21 @@ const Chat = () => {
   const [text, setText] = useState("");
   const [currentUser, setCurrentUser] = useState({});
   const [messages, setMessages] = useState([]);
-  const [arrivalMessage, setArrivalMessage] = useState(null);
-  const messageEndRef = useRef(null);
+
+  const divRef = useRef(null);
+  const scrollToElement = () => {
+    const { current } = divRef;
+    if (current !== null) {
+      current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   const socket = useMemo(() => {
     return io(base);
   }, []);
+  useEffect(scrollToElement, [messages]);
 
   useEffect(() => {
+    console.log("hi");
     socket.on("connect", () => {
       socket.emit("add-user", id);
     });
@@ -30,7 +38,8 @@ const Chat = () => {
         from: msg.from,
         to: msg.to,
       };
-      setMessages([...messages, newMessage]);
+      console.log(messages);
+      setMessages(prev=>[...prev, newMessage]);
     });
   }, []);
 
@@ -43,11 +52,13 @@ const Chat = () => {
   }
 
   function sendMessage() {
+    setText("");
     let newMessage = {
       content: text,
       from: my?._id,
       to: id,
     };
+
     socket.emit("send-msg", {
       to: id,
       from: my?._id,
@@ -70,7 +81,6 @@ const Chat = () => {
           console.log(data.er);
         }
       });
-    setText("");
   }
   useEffect(() => {
     fetch(`${base}/message/by-chat/${id}`, {
@@ -87,60 +97,52 @@ const Chat = () => {
   }, []);
 
   return (
-    <div className="h-[100dvh]">
+    <>
       <CompactSidebar />
-      <div className="w-[min(560px,96%)] mx-auto h-[100dvh] bg-white ">
-        <div className="flex items-center gap-4 p-4 border-b">
-          <img
-            src={currentUser?.profile_url || avatar}
-            className="size-8 rounded-full"
-            alt=""
-          />
-          <div className="font-medium">{currentUser.name}</div>
-        </div>
-        <div className="h-[calc(92dvh-55px)] overflow-scroll no-scrollbar">
-          {messages.map((item, index) => {
-            return item?.from == my?._id ? (
-              <div className="flex justify-end w-full px-2">
-                <div
-                  className="bg-blue-500 text-sm text-white max-w-[300px] break-words p-2 mt-2"
-                  style={{ borderRadius: 10 + "px" }}
-                >
-                  {item?.content}
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-start w-full px-2">
-                <div
-                  className="bg-gray-400 text-sm text-white max-w-[300px] break-words p-2 mt-2"
-                  style={{ borderRadius: 10 + "px" }}
-                >
-                  {item?.content}
-                </div>
-              </div>
-            );
-          })}
-          <div ref={messageEndRef}></div>
-        </div>
-        <div className="h-[calc(9dvh-32px)] border-t flex px-4 py-2 items-center gap-4">
-          <input
-            type="text"
-            placeholder="Type message here"
-            className=" border w-full py-2 px-4 rounded-full"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          {text && (
+      <div className="w-[min(560px,100%)] mx-auto">
+        <div class="flex h-screen flex-col bg-white">
+          <div class="flex border-b items-center gap-2 p-3">
+            <img
+              src={currentUser?.profile_url || avatar}
+              className="size-12 rounded-full border"
+              alt=""
+            />
+            <div className="font-medium">{currentUser?.name}</div>
+          </div>
+          <div class="flex-grow overflow-y-auto">
+            <div class="flex flex-col space-y-2 p-4">
+              {messages.map((item) => {
+                return item.from == my?._id ? (
+                  <div class="flex items-center self-end rounded-xl rounded-tr bg-blue-500 py-2 px-3 text-white">
+                    <p>{item?.content}</p>
+                  </div>
+                ) : (
+                  <div class="flex items-center self-start rounded-xl rounded-tl bg-gray-300 py-2 px-3">
+                    <p>{item?.content}</p>
+                  </div>
+                );
+              })}
+              <div id="show-content" ref={divRef}></div>
+            </div>
+          </div>
+          <div class="flex items-center p-4 border-t gap-3">
+            <input
+              type="text"
+              placeholder="Type your message..."
+              class="w-full rounded-full text-sm border border-gray-300 px-4 py-2.5"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
             <button
               onClick={sendMessage}
-              className="bg-primary p-2 rounded-full"
+              class="rounded-full bg-blue-500 p-3 text-white"
             >
-              <LuSend size={22} />
+              <FaPaperPlane />
             </button>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

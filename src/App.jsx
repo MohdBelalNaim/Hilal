@@ -41,7 +41,6 @@ import PostDetails from "./pages/PostDetails";
 import Search from "./pages/Search";
 
 function App() {
-
   return (
     <BrowserRouter>
       <Routes>
@@ -90,7 +89,6 @@ function App() {
         <Route path="/saved" element={<SavedPost />} />
       </Routes>
       <MobileBottomNavbar />
-      <div className="h-16 hidden max-sm:block"></div>
     </BrowserRouter>
   );
 }

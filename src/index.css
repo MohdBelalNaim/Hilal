@@ -4,6 +4,9 @@
 body {
   background-color: #f4f6fc;
 }
+*::-webkit-scrollbar {
+  display: none !important;
+}
 .scrollbar-hide {
   -ms-overflow-style: none !important; /* IE and Edge */
   scrollbar-width: none !important; /* Firefox */
