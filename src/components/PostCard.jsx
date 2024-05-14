@@ -128,7 +128,8 @@ const PostCard = ({ index, data, text }) => {
       .then((res) => res.json())
       .then((data) => setHide(true));
   }
-}
+  }
+
   useEffect(() => {
     if (data?.likes?.includes(my?._id)) {
       setLiked(true);
@@ -150,9 +151,15 @@ const PostCard = ({ index, data, text }) => {
           >
             {data?.user?._id == my?._id ? (
               <>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                <Link to={`/edit/${data?._id}`}>
+                <div 
+                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  // onClick={() => editPost(data?._id)}
+                >
                   <BsPen /> Edit post
                 </div>
+                </Link>
+                
                 <div 
                   className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
                   onClick={() => deletePost(data?._id)}
