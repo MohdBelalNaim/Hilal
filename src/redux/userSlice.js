@@ -1,7 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+
 const url = "https://hilal-backend.vercel.app";
 // const url = "http://localhost:5050";
+
 export const loginUser = createAsyncThunk("user/loginUser", async () => {
   const res = await fetch(`${url}/user/my`, {
     method: "POST",

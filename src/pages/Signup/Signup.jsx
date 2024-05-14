@@ -4,20 +4,47 @@ import { FcGoogle } from "react-icons/fc";
 import { TailSpin } from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/images/logo.jpeg";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { loginUser } from "@/redux/userSlice";
 
 const Signup = () => {
+
   localStorage.clear();
-  const {
-    register,
-    handleSubmit
-  } = useForm();
+  const {register, handleSubmit} = useForm();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const base = useSelector((state) => state.userSlice.base_url);
+  const dispatch = useDispatch();
+
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+  const detail = jwtDecode(credentialResponse.credential);
+  const name = detail.given_name + " " + detail.family_name;
+  const accessId = detail.email;
+  const photo = detail.picture
+  fetch(`${base}/auth/google-login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, accessId ,photo}),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          navigate("/signup")
+        } else {
+          localStorage.setItem("token", data.token);
+          dispatch(loginUser());
+          navigate("/home");
+        }
+      })
+      .catch((err) => console.log(err))
+    }
 
   const signup = (data) => {
     setLoading(true);
@@ -142,9 +169,17 @@ const Signup = () => {
             <div>or</div>
             <div className="w-full h-[0.7px] bg-gray-300"></div>
           </div>
-          <button className="max-sm:bg-white py-2.5 gap-2 text-sm rounded-full flex items-center justify-center bg-gray-100 w-full">
+          <div className="py-2.5 gap-2 text-sm rounded-full flex items-center justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleLoginSuccess}
+              onError={() => {
+                console.log('Login Failed');
+            }}
+          />
+          </div>
+          {/* <button className="max-sm:bg-white py-2.5 gap-2 text-sm rounded-full flex items-center justify-center bg-gray-100 w-full">
             <FcGoogle size={22} /> Continue with google
-          </button>
+          </button> */}
         </div>
       </form>
     </div>
