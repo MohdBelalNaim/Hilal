@@ -129,8 +129,6 @@ const PostCard = ({ index, data, text }) => {
       .then((data) => setHide(true));
   }
 }
-
-
   useEffect(() => {
     if (data?.likes?.includes(my?._id)) {
       setLiked(true);
