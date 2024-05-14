@@ -1,25 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import CompactSidebar from "../components/CompactSidebar";
 import { LuSend } from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import avatar from "../assets/images/avatar.jpeg";
+import { io } from "socket.io-client";
+
 const Chat = () => {
   const { id } = useParams();
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
   const [text, setText] = useState("");
   const [currentUser, setCurrentUser] = useState({});
-  const [messages, setMessages] = useState([
-    {
-      text: "Hi how are you",
-      from: "78560fh7ct9w8mu4594",
-    },
-    {
-      text: "I'm fine thanks",
-      from: "66389140e6822bed87a6d47d",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [arrivalMessage, setArrivalMessage] = useState(null);
+  const messageEndRef = useRef(null);
+  const socket = useMemo(() => {
+    return io(base);
+  }, []);
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      socket.emit("add-user", id);
+    });
+    socket.on("msg-recieve", (msg) => {
+      console.log(JSON.stringify(msg));
+      let newMessage = {
+        content: msg.message,
+        from: msg.from,
+        to: msg.to,
+      };
+      setMessages([...messages, newMessage]);
+    });
+  }, []);
 
   function getCurrentUser() {
     fetch(`${base}/user/by-id/${id}`, {
@@ -28,15 +41,48 @@ const Chat = () => {
       .then((res) => res.json())
       .then((data) => setCurrentUser(data));
   }
+
   function sendMessage() {
     let newMessage = {
-      text,
+      content: text,
       from: my?._id,
+      to: id,
     };
+    socket.emit("send-msg", {
+      to: id,
+      from: my?._id,
+      message: text,
+    });
     setMessages([...messages, newMessage]);
+    fetch(`${base}/message/send/${id}`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        content: text,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          console.log(data.er);
+        }
+      });
     setText("");
   }
   useEffect(() => {
+    fetch(`${base}/message/by-chat/${id}`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.found) setMessages(data.found);
+      });
     getCurrentUser();
   }, []);
 
@@ -60,7 +106,7 @@ const Chat = () => {
                   className="bg-blue-500 text-sm text-white max-w-[300px] break-words p-2 mt-2"
                   style={{ borderRadius: 10 + "px" }}
                 >
-                  {item?.text}
+                  {item?.content}
                 </div>
               </div>
             ) : (
@@ -69,11 +115,12 @@ const Chat = () => {
                   className="bg-gray-400 text-sm text-white max-w-[300px] break-words p-2 mt-2"
                   style={{ borderRadius: 10 + "px" }}
                 >
-                  {item?.text}
+                  {item?.content}
                 </div>
               </div>
             );
           })}
+          <div ref={messageEndRef}></div>
         </div>
         <div className="h-[calc(9dvh-32px)] border-t flex px-4 py-2 items-center gap-4">
           <input
