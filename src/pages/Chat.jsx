@@ -27,7 +27,6 @@ const Chat = () => {
   useEffect(scrollToElement, [messages]);
 
   useEffect(() => {
-    console.log("hi");
     socket.on("connect", () => {
       socket.emit("add-user", id);
     });
@@ -39,8 +38,11 @@ const Chat = () => {
         to: msg.to,
       };
       console.log(messages);
-      setMessages(prev=>[...prev, newMessage]);
+      setMessages((prev) => [...prev, newMessage]);
     });
+    return () => {
+      socket.close();
+    };
   }, []);
 
   function getCurrentUser() {
