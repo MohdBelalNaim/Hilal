@@ -83,7 +83,7 @@ const ChangePassword = () => {
 
   const onSubmitPassword = async (data) => {
     setLoading(true);
-    const {currentpassword, password, confirmpassword} = data
+    const { password, confirmpassword} = data
     fetch(`${base}/auth/password-reset`, {
       method: "POST",
       headers: {
@@ -169,13 +169,6 @@ const ChangePassword = () => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmitPassword)} className="mt-6 grid gap-y-4">
-            <input
-              type="password"
-              {...register("currentpassword", { required: true })}
-              className="w-full p-3 border rounded-md"
-              placeholder="Current password"
-            />
-            {errors.currentpassword && <p className="text-red-500">Current password is required.</p>}
 
             <input
               type="password"
