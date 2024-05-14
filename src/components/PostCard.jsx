@@ -39,7 +39,6 @@ const PostCard = ({ data }) => {
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
 
   const [date, setDate] = useState([]);
-
   const [hide, setHide] = useState(false);
 
   function addLike() {
@@ -55,6 +54,7 @@ const PostCard = ({ data }) => {
         setLiked(true);
       });
   }
+
   function removeLike() {
     setLiked(false);
     fetch(`${base}/post/remove-like/${data?._id}`, {
@@ -85,6 +85,12 @@ const PostCard = ({ data }) => {
         res.json({ error: "Something went wrong!" });
         console.log(err);
       });
+  }
+  
+  function repost() {
+    fetch(`${base}/post/create`, {
+      method: "POST",
+    });
   }
 
   function deletePost(id) {

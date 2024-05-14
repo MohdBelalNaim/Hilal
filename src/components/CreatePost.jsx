@@ -79,6 +79,10 @@ const CreatePost = () => {
 
   const base = useSelector((state) => state.userSlice.base_url);
   async function savePost() {
+    if (text=="" || !uploadImage=="") {
+      toast.error("Post cannot be empty!");
+      return;
+    }
     await fetch(`${base}/post/create`, {
       method: "POST",
       headers: {
