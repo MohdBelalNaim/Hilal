@@ -39,12 +39,14 @@ import ForgotPassword from "./pages/ForgotPassword";
 import PasswordChange from "./pages/PasswordChange";
 import PostDetails from "./pages/PostDetails";
 import Search from "./pages/Search";
+import EditPost from "./components/EditPost";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/edit/:id" element={<EditPost />} />
 
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/signup" element={<Signup />} />
