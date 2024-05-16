@@ -1,8 +1,30 @@
-import React from 'react'
-import { BsPersonAdd } from 'react-icons/bs';
-import { FaAngleRight } from 'react-icons/fa6';
+import React, { useEffect, useState } from "react";
+import { BsPersonAdd } from "react-icons/bs";
+import { FaAngleRight } from "react-icons/fa6";
+import { useSelector } from "react-redux";
+import avatar from "../../assets/images/avatar.jpeg";
 
 const Notifications = () => {
+  const base = useSelector((state) => state.userSlice.base_url);
+  const [notifications, setNotifications] = useState([]);
+  const types = {
+    Like: "liked your post",
+    comment: "commented on your post",
+    repost: "reposted your post",
+  };
+  useEffect(() => {
+    fetch(`${base}/notification/my`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setNotifications(data.data);
+      });
+  }, []);
   return (
     <div className="w-[390px] overflow-scroll animate__animated animate__fadeIn">
       <div className="text-lg p-4 font-bold">Notifications</div>
@@ -15,83 +37,35 @@ const Notifications = () => {
           <FaAngleRight />
         </div>
       </div>
-      <div className="p-4 border-b">
-        <div className="font-bold mb-4">Today</div>
-        {"abcde".split("").map((item, index) => {
+      <div className="p-4">
+        {notifications.map((item, index) => {
+          console.log(item);
           return (
-            <div className="flex justify-between mb-6">
+            <div className="flex justify-between mb-6 gap-3">
               <div className="flex items-center text-sm gap-2">
                 <img
-                  src={`https://picsum.photos/400?${index}`}
+                  src={item?.from?.profile_url || avatar}
                   className="size-10 rounded-full"
                   alt=""
                 />
                 <div>
-                  <span className="font-bold">Sajad khaki</span> commented on a
-                  post you're tagged in
+                  <span className="font-bold">{item?.from?.name}</span>{" "}
+                  {types[item?.type]}
                 </div>
               </div>
-              <img
-                src={`https://picsum.photos/400?${index * 10}`}
-                className="size-10 rounded-md"
-                alt=""
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="p-4 border-b">
-        <div className="font-bold mb-4">This week</div>
-        {"abcde".split("").map((item, index) => {
-          return (
-            <div className="flex justify-between mb-6">
-              <div className="flex items-center text-sm gap-2">
+              {item?.content?.asset_url && (
                 <img
-                  src={`https://picsum.photos/400?${index}`}
-                  className="size-10 rounded-full"
+                  src={item?.content?.asset_url}
+                  className="size-10 rounded-md"
                   alt=""
                 />
-                <div>
-                  <span className="font-bold">Sajad khaki</span> commented on a
-                  post you're tagged in
-                </div>
-              </div>
-              <img
-                src={`https://picsum.photos/400?${index * 10}`}
-                className="size-10 rounded-md"
-                alt=""
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="p-4 border-b">
-        <div className="font-bold mb-4">Earlier</div>
-        {"abcde".split("").map((item, index) => {
-          return (
-            <div className="flex justify-between mb-6">
-              <div className="flex items-center text-sm gap-2">
-                <img
-                  src={`https://picsum.photos/400?${index}`}
-                  className="size-10 rounded-full"
-                  alt=""
-                />
-                <div>
-                  <span className="font-bold">Sajad khaki</span> commented on a
-                  post you're tagged in
-                </div>
-              </div>
-              <img
-                src={`https://picsum.photos/400?${index * 10}`}
-                className="size-10 rounded-md"
-                alt=""
-              />
+              )}
             </div>
           );
         })}
       </div>
     </div>
   );
-}
+};
 
-export default Notifications
+export default Notifications;

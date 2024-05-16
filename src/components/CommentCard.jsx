@@ -6,8 +6,7 @@ import {
   BsTrash,
 } from "react-icons/bs";
 import avatar from "../assets/images/avatar.jpeg";
-import { useDispatch, useSelector } from "react-redux";
-import { showDetails } from "@/redux/toggleSlice";
+import { useSelector } from "react-redux";
 const CommentCard = ({ id, data, load }) => {
   const [options, setOptions] = useState(false);
   const my = useSelector((state) => state.userSlice.user);
@@ -78,7 +77,7 @@ const CommentCard = ({ id, data, load }) => {
             </div>
           </div>
           <div className="text-gray-500 flex gap-2">
-            <span className="text-xs">2d</span>{" "}
+            <span className="text-xs"></span>{" "}
             <BsThreeDotsVertical
               className="cursor-pointer"
               onClick={() => setOptions(!options)}
