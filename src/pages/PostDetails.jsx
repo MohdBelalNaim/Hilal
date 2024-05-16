@@ -17,6 +17,7 @@ import Markdown from "react-markdown";
 import avatar from "../assets/images/avatar.jpeg";
 import { RWebShare } from "react-web-share";
 import FullScreenLoader from "@/components/FullScreenLoader";
+import notify from "../../utils/sendNotification";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -40,6 +41,7 @@ const PostDetails = () => {
       .then((res) => res.json())
       .then((data) => {
         getdetails();
+        notify(details?.user?._id, "comment", details?._id, base);
         setComment("");
       });
   };
@@ -114,9 +116,7 @@ const PostDetails = () => {
             alt=""
           />
           <div className="text-sm max-sm:text-xs">
-            <div className="font-medium">
-              {details?.user?.name} 
-            </div>
+            <div className="font-medium">{details?.user?.name}</div>
             <div className="text-xs text-gray-600">
               {details?.user?.city}, {details?.user?.state},{" "}
               {details?.user?.country}

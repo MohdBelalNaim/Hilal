@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   BsAspectRatio,
   BsImage,
@@ -30,6 +30,7 @@ const CreatePost = () => {
   const [croppedImage, setCroppedImage] = useState(null);
   const [aspect, setAspect] = useState(1 / 1);
   const [aspectMenu, setAspectMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
   const editorRef = useRef("");
   const [load, setLoad] = useState(false);
 
@@ -42,24 +43,22 @@ const CreatePost = () => {
     setText(markdown);
   };
 
-  const showCroppedImage = useCallback(async () => {
+  const handelSave = useCallback(async () => {
     try {
-      const croppedImage = await getCroppedImg(
+      const { file } = await getCroppedImg(
         URL.createObjectURL(uploadImage),
         croppedAreaPixels,
         rotation
       );
-      console.log("donee", { croppedImage });
-      setCroppedImage(croppedImage);
+      await savePost(file);
     } catch (e) {
       console.error(e);
     }
   }, [croppedAreaPixels, rotation, uploadImage]);
 
-  const saveImage = async () => {
-    if (uploadImage == "" || uploadImage == null) return "";
+  const saveImage = async (file) => {
     const data = new FormData();
-    data.append("file", uploadImage);
+    data.append("file", file);
     data.append("upload_preset", "hilal_link");
     data.append("cloud_name", "myimagestorage");
 
@@ -82,6 +81,14 @@ const CreatePost = () => {
   const base = useSelector((state) => state.userSlice.base_url);
   async function savePost() {
     setLoad(true);
+
+  async function savePost(imgfile) {
+    if (text == "" && uploadImage == "") {
+      toast.error("Post cannot be empty!");
+      return;
+    }
+    setLoading(true);
+
     await fetch(`${base}/post/create`, {
       method: "POST",
       headers: {
@@ -91,7 +98,7 @@ const CreatePost = () => {
       body: JSON.stringify({
         text,
         post_type: uploadImage ? "Media" : "Text",
-        asset_url: await saveImage(),
+        asset_url: await saveImage(imgfile),
       }),
     })
       .then((res) => res.json())
@@ -99,8 +106,10 @@ const CreatePost = () => {
         if (data.success) {
           toast.success(data.success);
           dispatch(hideCreate());
+          setLoading(false);
         } else {
           toast.error(data.error);
+          setLoading(false);
         }
       })
       .finally(() => {
@@ -219,14 +228,6 @@ const CreatePost = () => {
           Crop
         </button> */}
 
-        <div className="cropped-image-container">
-          {croppedImage && (
-            <img className="cropped-image" src={croppedImage} alt="cropped" />
-          )}
-          {croppedImage && (
-            <button onClick={() => setCroppedImage(false)}>close</button>
-          )}
-        </div>
         <div className="border-t flex items-center justify-between p-4">
           <div className="flex text-lg items-center gap-3 text-gray-500">
             <span className="text-sm">Add</span>
@@ -256,6 +257,7 @@ const CreatePost = () => {
                 "Post"
               )}
             </button>
+
           </div>
         </div>
       </div>

@@ -21,13 +21,11 @@ const Chat = () => {
       current.scrollIntoView({ behavior: "smooth" });
     }
   };
-  const socket = useMemo(() => {
-    return io(base);
-  }, []);
+  const socket =  io(base);
+ 
   useEffect(scrollToElement, [messages]);
 
   useEffect(() => {
-    console.log("hi");
     socket.on("connect", () => {
       socket.emit("add-user", id);
     });
@@ -39,8 +37,11 @@ const Chat = () => {
         to: msg.to,
       };
       console.log(messages);
-      setMessages(prev=>[...prev, newMessage]);
+      setMessages((prev) => [...prev, newMessage]);
     });
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   function getCurrentUser() {

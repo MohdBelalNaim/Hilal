@@ -15,26 +15,17 @@ import {
   BsTrash,
   BsX,
 } from "react-icons/bs";
-import { useDispatch, useSelector } from "react-redux";
-import { showDetails } from "../redux/toggleSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import { MdBlock } from "react-icons/md";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import avatar from "../assets/images/avatar.jpeg";
-import { PiPaperPlaneRight } from "react-icons/pi";
 import { RWebShare } from "react-web-share";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { FaShare } from "react-icons/fa";
+import moment from "moment";
 import { toast } from "sonner";
-
-const PostCard = ({ index, data, text }) => {
-  const dispatch = useDispatch();
+import notify from "../../utils/sendNotification";
+const PostCard = ({ data }) => {
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
   const createPost = useSelector((state) => state.toggleSlice.createPost);
@@ -44,32 +35,6 @@ const PostCard = ({ index, data, text }) => {
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
   const [hide, setHide] = useState(false);
 
-  const addComment = () => {
-    fetch(`${base}/post/add-comment/${data._id}`, {
-      method: "PUT",
-      headers: {
-        authorization: "Bearer " + localStorage.getItem("token"),
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ comment }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        getdetails();
-      });
-  };
-  
-  function getdetails() {
-    fetch(`${base}/post/post-by-id/${data?._id}`, {
-      method: "POST",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        dispatch(showDetails(data?.data));
-        console.log(data?.data);
-        setComment("");
-      });
-  }
 
   function addLike() {
     setLiked(true);
@@ -80,8 +45,9 @@ const PostCard = ({ index, data, text }) => {
       },
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then((mydata) => {
         setLiked(true);
+        notify(data?.user?._id, "Like", data?._id, base);
       });
   }
 
@@ -117,6 +83,7 @@ const PostCard = ({ index, data, text }) => {
       });
   }
 
+
   function deletePost(id) {
   let confirmation = confirm("Are you sure you want to delete this Post?");
   if (confirmation) {
@@ -131,7 +98,30 @@ const PostCard = ({ index, data, text }) => {
         toast.success("Post deleted successfully"),
         setHide(true)
       });
+
+  async function copyToClipboard() {
+    const textToCopy = `${base}/post-details/${data?._id}`;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+
   }
+
+  function deletePost(id) {
+    setHide(true);
+    let confirmation = confirm("Are you sure you want to delete this Post?");
+    if (confirmation) {
+      fetch(`${base}/post/delete/${id}`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      });
+    }
   }
 
   const repost = (id) => {
@@ -157,19 +147,82 @@ const PostCard = ({ index, data, text }) => {
       setLiked(false);
     }
   }, []);
-  
+  useEffect(() => {
+    setDate(moment(data?.date).fromNow());
+  }, []);
   return (
     <>
       <div
         className=" mb-5 relative max-sm:mb-2"
         style={{ borderRadius: 10 + "px" }}
       >
-      <div className={`${hide && "hidden"} relative`}>
-        {options && (
+        <div className={`${hide && "hidden"} relative`}>
+          {options && (
+            <div
+              className="bg-white overflow-hidden z-[99] absolute text-sm border shadow rounded-md right-2 top-14"
+              style={{ borderRadius: 10 + "px" }}
+            >
+              {data?.user?._id == my?._id ? (
+                <>
+                  <Link to={`/edit/${data?._id}`}>
+                    <div
+                      className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                      // onClick={() => editPost(data?._id)}
+                    >
+                      <BsPen /> Edit post
+                    </div>
+                  </Link>
+
+                  <div
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                    onClick={() => deletePost(data?._id)}
+                  >
+                    <BsTrash /> Delete post
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <BsShare /> Share post
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    onClick={savePost}
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  >
+                    <BsBookmark /> Save post
+                  </div>
+                  <div
+                    onClick={copyToClipboard}
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  >
+                    <BsLink /> Copy link
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <BsExclamationCircle /> Report
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <MdBlock /> Block user
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <BsPerson /> Follow user
+                  </div>
+                </>
+              )}
+
+              <div
+                onClick={() => setOptions(!options)}
+                className="py-1.5 max-sm:text-xs px-3 flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+              >
+                <BsX /> Close
+              </div>
+            </div>
+          )}
+
           <div
-            className="bg-white overflow-hidden z-[99] absolute text-sm border shadow rounded-md right-2 top-14"
-            style={{ borderRadius: 10 + "px" }}
+            className="flex justify-between bg-white p-3"
+            style={{ borderRadius: 8 + "px" }}
           >
+
             {data?.user?._id == my?._id ? (
               <>
                 <Link to={`/edit/${data?._id}`}>
@@ -188,46 +241,37 @@ const PostCard = ({ index, data, text }) => {
                 </div>
                 <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
                   <BsShare /> Share post
-                </div>
-              </>
-            ) : (
-              <>
-                <div
-                  onClick={savePost}
-                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-                >
-                  <BsBookmark /> Save post
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsLink /> Copy link
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsExclamationCircle /> Report
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <MdBlock /> Block user
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsPerson /> Follow user
-                </div>
-              </>
-            )}
 
-            <div
-              onClick={() => setOptions(!options)}
-              className="py-1.5 max-sm:text-xs px-3 flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-            >
-              <BsX /> Close
+                </div>
+              </div>
+            </Link>
+            <div className="flex text-xs items-center gap-3 text-gray-500">
+              {/* 6 Jan 2022{" "} */}
+              <span className="font-normal text-gray-600 text-xs">{date} </span>
+              <BsThreeDots
+                onClick={() => setOptions(!options)}
+                className="cursor-pointer max-sm:text-xs"
+              />
             </div>
           </div>
-        )}
 
         
             <div className="flex justify-between bg-white p-3 "  style={{ borderRadius: 10 + "px" }}>
             <div className="flex gap-3">
+
+          {data?.text && (
+            <Link to={`/post-details/${data?._id}`}>
+              <div className="bg-white text-sm pb-2 px-4">
+                <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
+              </div>
+            </Link>
+          )}
+
+          {data?.asset_url && (
+            <Link to={`/post-details/${data?._id}`}>
               <img
-                src={data?.user?.profile_url ? data?.user?.profile_url : avatar}
-                className="size-12 max-sm:size-10 rounded-full"
+                src={data?.asset_url}
+                className="w-full max-sm:h-[300px] h-[360px] object-cover cursor-pointer"
                 alt=""
               />
               <div>
@@ -263,38 +307,58 @@ const PostCard = ({ index, data, text }) => {
           alt=""
         />)}
 
-        <div className="bg-white flex p-3 justify-between card-bottom">
-          <div className="flex gap-8 max-sm:gap-6">
-            {liked ? (
-              <div
-                onClick={removeLike}
-                className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
-              >
-                <BsHeartFill size={18} className="text-red-500" />
+            </Link>
+          )}
 
-                <div className="text-xs max-sm:text-[11px]">{likeVal + 1}</div>
-              </div>
-            ) : (
-              <div
-                onClick={addLike}
-                className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
-              >
-                <BsHeart size={18} />
+          <div className="bg-white flex p-3 justify-between card-bottom">
+            <div className="flex gap-8 max-sm:gap-6">
+              {liked ? (
+                <div
+                  onClick={removeLike}
+                  className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                >
+                  <BsHeartFill size={18} className="text-red-500" />
 
-                <div className="text-xs max-sm:text-[11px]">
-                  {data?.likes?.length}
+                  <div className="text-xs max-sm:text-[11px]">
+                    {likeVal + 1}
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div
+                  onClick={addLike}
+                  className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                >
+                  <BsHeart size={18} />
 
-            <Link to={`/post-details/${data?._id}`}>
+                  <div className="text-xs max-sm:text-[11px]">
+                    {data?.likes?.length}
+                  </div>
+                </div>
+              )}
+
+              <Link to={`/post-details/${data?._id}`}>
+                <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+                  <BsChat size={18} />
+
+                  <div className="text-xs max-sm:text-[10px]">
+                    {data?.comments?.length}
+                  </div>
+                </div>
+              </Link>
+
+              {/* <Link to={`/repost/${data?._id}`}> */}
+              <div className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer">
+                <BsRepeat size={18} />
+                <div className="text-xs max-sm:text-[11px]">0</div>
+              </div>
+              {/* </Link> */}
+
               <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-                <BsChat size={18} />
+                <BsEye size={18} />
 
-                <div className="text-xs max-sm:text-[10px]">
-                  {data?.comments?.length}
-                </div>
+                <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
               </div>
+
             </Link>
             
             {/* <Link to={`/repost/${data?._id}`}>  */}
@@ -313,19 +377,21 @@ const PostCard = ({ index, data, text }) => {
               <BsEye size={18} />
               <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
             </div>
-          </div>
 
-          <RWebShare
-            data={{
-              text: "Check this post on HilalLink",
-              url: "https://hilal-one.vercel.app",
-              title: "Share this post",
-            }}
-            onClick={() => console.log("shared successfully!")}
-          >
-            <BsShare className="max-sm:text-xs" />
-          </RWebShare>
-        </div>
+            </div>
+
+            <RWebShare
+              data={{
+                text: "Check this post on HilalLink",
+                url: "https://hilal-one.vercel.app",
+                title: "Share this post",
+              }}
+              onClick={() => console.log("shared successfully!")}
+            >
+              <BsShare className="max-sm:text-xs" />
+            </RWebShare>
+
+          </div>
         </div>
       </div>
     </>
@@ -333,5 +399,3 @@ const PostCard = ({ index, data, text }) => {
 };
 
 export default PostCard;
-
-

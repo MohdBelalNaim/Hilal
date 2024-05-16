@@ -103,12 +103,13 @@ const EditPost = () => {
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
             )}
+
         </div>
     );
 };
 
 export default EditPost;
-
