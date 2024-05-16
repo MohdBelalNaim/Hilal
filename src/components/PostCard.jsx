@@ -32,7 +32,6 @@ const PostCard = ({ data }) => {
   const [liked, setLiked] = useState(false);
   const [options, setOptions] = useState(false);
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
-
   const [date, setDate] = useState([]);
   const [hide, setHide] = useState(false);
 
@@ -130,9 +129,11 @@ const PostCard = ({ data }) => {
       setLiked(false);
     }
   }, []);
+
   useEffect(() => {
     setDate(moment(data?.date).fromNow());
   }, []);
+
   return (
     <>
       <div
@@ -150,7 +151,6 @@ const PostCard = ({ data }) => {
                   <Link to={`/edit/${data?._id}`}>
                     <div
                       className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-                      // onClick={() => editPost(data?._id)}
                     >
                       <BsPen /> Edit post
                     </div>
@@ -285,7 +285,6 @@ const PostCard = ({ data }) => {
               <Link to={`/post-details/${data?._id}`}>
                 <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
                   <BsChat size={18} />
-
                   <div className="text-xs max-sm:text-[10px]">
                     {data?.comments?.length}
                   </div>
@@ -297,12 +296,11 @@ const PostCard = ({ data }) => {
                 className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer"
               >
                 <BsRepeat size={18} />
-                <div className="text-xs max-sm:text-[11px]">0</div>
+                <div className="text-xs max-sm:text-[11px]">{data?.reposts}</div>
               </div>
 
               <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
                 <BsEye size={18} />
-
                 <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
               </div>
             </div>

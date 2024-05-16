@@ -165,10 +165,6 @@ const PostDetails = () => {
               <BsChat className="text-xl" />
               <span>{details?.comments?.length}</span>
             </div>
-            <div className="flex text-[14px] items-center text-gray-600 gap-2">
-              <BsRepeat className="text-xl" />
-              <span>0</span>
-            </div>
           </div>
 
           <RWebShare

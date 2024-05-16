@@ -7,42 +7,29 @@ import {
   BsHeart,
   BsHeartFill,
   BsLink,
-  BsPen,
   BsPerson,
-  BsRepeat,
   BsShare,
   BsThreeDots,
-  BsTrash,
   BsX,
 } from "react-icons/bs";
-import { useDispatch, useSelector } from "react-redux";
-import { showDetails } from "../redux/toggleSlice";
-import { Link, useNavigate } from "react-router-dom";
-import { MdBlock } from "react-icons/md";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import avatar from "../assets/images/avatar.jpeg";
-import { PiPaperPlaneRight } from "react-icons/pi";
-import { RWebShare } from "react-web-share";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { FaShare } from "react-icons/fa";
 import { toast } from "sonner";
+import moment from "moment";
 
 const RepostCard = ({ index, data }) => {
   console.log(data?.original_user);
-  const dispatch = useDispatch();
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
   const [liked, setLiked] = useState(false);
-  const [comment, setComment] = useState("");
   const [options, setOptions] = useState(false);
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
   const [hide, setHide] = useState(false);
+  const [date, setDate] = useState([]);
+
 
   function addLike() {
     setLiked(true);
@@ -90,37 +77,17 @@ const RepostCard = ({ index, data }) => {
       });
   }
 
-  function deletePost(id) {
-    let confirmation = confirm("Are you sure you want to delete this Post?");
-    if (confirmation) {
-      fetch(`${base}/post/delete/${id}`, {
-        method: "POST",
-        headers: {
-          authorization: "Bearer " + localStorage.getItem("token"),
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          toast.success("Post deleted successfully"), setHide(true);
-        });
+  async function copyToClipboard() {
+    const textToCopy = `${base}/post-details/${data?._id}`;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy:", err);
     }
   }
 
-  const repost = (id) => {
-    fetch(`${base}/repost/${id}`, {
-      method: "POST",
-      headers: {
-        authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        toast.success("Post reposted successfully");
-      })
-      .catch((error) => {
-        toast.error(error);
-      });
-  };
 
   useEffect(() => {
     if (data?.likes?.includes(my?._id)) {
@@ -128,6 +95,10 @@ const RepostCard = ({ index, data }) => {
     } else {
       setLiked(false);
     }
+  }, []);
+
+  useEffect(() => {
+    setDate(moment(data?.date).fromNow());
   }, []);
 
   return (
@@ -146,12 +117,18 @@ const RepostCard = ({ index, data }) => {
             </div>
             {options && (
               <div className="bg-white absolute text-sm border shadow rounded-md right-2 top-14">
-                <div className="py-1.5 px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsBookmark /> Save post
-                </div>
-                <div className="py-1.5 px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsLink /> Copy link
-                </div>
+                <div
+                    onClick={savePost}
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  >
+                    <BsBookmark /> Save post
+                  </div>
+                <div
+                    onClick={copyToClipboard}
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  >
+                    <BsLink /> Copy link
+                  </div>
                 <div className="py-1.5 px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
                   <BsExclamationCircle /> Report
                 </div>
@@ -168,6 +145,7 @@ const RepostCard = ({ index, data }) => {
             )}
 
             <div className="flex justify-between bg-white p-3">
+              <Link to={`/profile/${data?.original_user?._id}`}>
               <div className="flex gap-3">
                 <img
                   src={
@@ -190,6 +168,7 @@ const RepostCard = ({ index, data }) => {
                   </div>
                 </div>
               </div>
+              </Link>
 
               <div className="flex text-xs items-center gap-3 text-gray-500">
                 <span className="font-normal text-gray-600 text-xs">2d </span>
@@ -200,36 +179,57 @@ const RepostCard = ({ index, data }) => {
               </div>
             </div>
 
-            {data.text && (
+            {data?.text && (
+            <Link to={`/post-details/${data?._id}`}>
               <div className="bg-white text-sm pb-2 px-4">
                 <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
               </div>
-            )}
+            </Link>
+          )}
 
-            {data.asset_url && (
+          {data?.asset_url && (
+            <Link to={`/post-details/${data?._id}`}>
               <img
-                src={data.asset_url}
-                className="w-full h-[360px] object-cover cursor-pointer"
+                src={data?.asset_url}
+                className="w-full max-sm:h-[300px] h-[360px] object-cover cursor-pointer"
                 alt=""
               />
-            )}
+            </Link>
+          )}
 
             <div className="bg-white flex p-3 justify-between">
               <div className="flex gap-8 max-sm:gap-4">
-                <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+                {liked ? (
+                <div
+                  onClick={removeLike}
+                  className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                >
+                  <BsHeartFill size={18} className="text-red-500" />
+
+                  <div className="text-xs max-sm:text-[11px]">
+                    {likeVal + 1}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={addLike}
+                  className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                >
                   <BsHeart size={18} />
                   <div className="text-xs max-sm:text-[11px]">
                     {data?.likes?.length}
                   </div>
                 </div>
+              )}
 
+                <Link to={`/post-details/${data?._id}`}>
                 <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
                   <BsChat size={18} />
                   <div className="text-xs max-sm:text-[10px]">
                     {data?.comments?.length}
                   </div>
                 </div>
-
+              </Link>
 
                 <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
                   <BsEye size={18} />
