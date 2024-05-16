@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { BsArrowLeft} from "react-icons/bs";
 import CompactSidebar from "../components/CompactSidebar";
 import { TbAdjustmentsHorizontal } from "react-icons/tb";
@@ -8,16 +8,23 @@ import All from "../components/Search/All";
 import People from "../components/Search/People";
 import Posts from "../components/Search/Posts";
 import Videos from "../components/Search/Videos";
+import { useNavigate } from "react-router-dom";
 
 const Search = () => {
-  
+
+  const [searchInput, setSearchInput] = useState("");
   const current = useSelector((state) => state.searchSlice.current);
-  
+  const navigate = useNavigate()
   const menu = {
     All: <All />,
     People: <People />,
     Posts: <Posts />,
     Videos: <Videos />,
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    navigate(`/search?query=${searchInput}`);
   };
 
   return (
@@ -26,14 +33,23 @@ const Search = () => {
       <div className="hidden max-sm:flex bg-white items-center p-2 gap-3">
         {" "}
         <BsArrowLeft size={22} />
-        <input
+        {/* <input
           type="text"
           className="p-1.5 border rounded-full text-xs w-full"
           placeholder="Search here"
-        />
+        /> */}
+        <form onSubmit={handleSearchSubmit}>
+            <input
+              type="text"
+              className="w-full p-1.5  outline-none border rounded-full text-sm"
+              placeholder="Search here..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            /> 
+          </form>
         <Drawer>
           <DrawerTrigger>
-            <TbAdjustmentsHorizontal size={22} />
+            <TbAdjustmentsHorizontal size={22} className="ml-16"/>
           </DrawerTrigger>
           <DrawerContent className="bg-white h-[300px] p-2">
             <div className="w-full h-full  flex flex-col justify-between">

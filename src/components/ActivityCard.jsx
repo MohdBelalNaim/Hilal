@@ -16,15 +16,17 @@ import {
 import { useDispatch } from "react-redux";
 import { showDetails } from "../redux/toggleSlice";
 import { Link } from "react-router-dom";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import avatar from "../assets/images/avatar.jpeg";
 
-const ActivityCard = ({ index }) => {
-  const dispatch = useDispatch();
+const ActivityCard = ({ index, data, text }) => {
   const [options, setOptions] = useState(false);
   return (
     <>
-      <div className="rounded-md overflow-hidden mb-5 relative">
+      <div className="rounded-md overflow-hidden mb-5 relative" style={{ borderRadius: 10 + "px" }}>
         <div className="bg-white px-4 py-3 border-b text-[12px] text-gray-500">
-          You liked this post
+          You reposted this post
         </div>
         {options && (
           <div className="bg-white absolute text-sm border shadow rounded-md right-2 top-14">
@@ -49,28 +51,25 @@ const ActivityCard = ({ index }) => {
           </div>
         )}
         <div className="flex justify-between bg-white p-3">
-          <Link to="/profile">
             <div className="flex gap-3">
               <img
-                src={`https://picsum.photos/400?${index}`}
+                src={data?.original_user?.profile_url ? data?.original_user?.profile_url : avatar}
                 className="size-12 max-sm:size-10 rounded-full"
                 alt=""
               />
               <div>
                 <div className="text-sm max-sm:text-xs font-bold">
-                  Islamic Society of Comput...
+                  {data.original_user.name} 
                 </div>
                 <div className="text-xs max-sm:text-[11px] text-gray-500">
-                  Lucknow, Uttar Pradesh, India
+                  {data.user.city}, {data.user.state}, {data.user.country}
                 </div>
                 <div className="text-xs max-sm:text-[11px] text-gray-500">
-                  A Non-Profit organisation
+                  {data.user.category}
                 </div>
               </div>
             </div>
-          </Link>
           <div className="flex text-xs items-center gap-3 text-gray-500">
-            {/* 6 Jan 2022{" "} */}
             <span className="font-normal text-gray-600 text-xs">2d </span>
             <BsThreeDots
               onClick={() => setOptions(!options)}
@@ -78,39 +77,45 @@ const ActivityCard = ({ index }) => {
             />
           </div>
         </div>
-        <img
-          onClick={() => {
-            dispatch(showDetails());
-          }}
-          src={`https://picsum.photos/600?${index}`}
+
+        {data.text && (<div className="bg-white text-sm pb-2 px-4">
+          <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
+        </div>)}
+
+        {data.asset_url && ( <img
+          src={data.asset_url}
           className="w-full h-[360px] object-cover cursor-pointer"
           alt=""
-        />
+        />)}
+        
         <div className="bg-white flex p-3 justify-between">
           <div className="flex gap-8 max-sm:gap-4">
-            <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-              <BsHeart />
+              <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+                <BsHeart size={18} />
+                <div className="text-xs max-sm:text-[11px]">
+                  {data?.likes?.length}
+                </div>
+              </div>
 
-              <div className="text-xs max-sm:text-[10px]">12.3K</div>
+            <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+              <BsChat size={18} />
+              <div className="text-xs max-sm:text-[10px]">
+                {data?.comments?.length}
+              </div>
             </div>
 
-            <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-              <BsChat />
-
-              <div className="text-xs max-sm:text-[10px]">48.8K</div>
-            </div>
             <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
               <BsRepeat />
-
               <div className="text-xs max-sm:text-[10px]">4.5M</div>
             </div>
-            <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-              <BsEye />
 
-              <div className="text-xs max-sm:text-[10px]">1.5M</div>
+             <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+              <BsEye size={18} />
+              <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
             </div>
-          </div>
 
+          </div>
+          
           <BsShare className="max-sm:text-xs" />
         </div>
       </div>
@@ -119,3 +124,6 @@ const ActivityCard = ({ index }) => {
 };
 
 export default ActivityCard;
+
+
+

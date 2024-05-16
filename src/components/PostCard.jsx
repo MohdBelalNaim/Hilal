@@ -37,6 +37,12 @@ const PostCard = ({ index, data, text }) => {
   const dispatch = useDispatch();
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
+  const createPost = useSelector((state) => state.toggleSlice.createPost);
+  const [liked, setLiked] = useState(false);
+  const [comment, setComment] = useState("");
+  const [options, setOptions] = useState(false);
+  const [likeVal, setLikeVal] = useState(data?.likes?.length);
+  const [hide, setHide] = useState(false);
 
   const addComment = () => {
     fetch(`${base}/post/add-comment/${data._id}`, {
@@ -52,13 +58,7 @@ const PostCard = ({ index, data, text }) => {
         getdetails();
       });
   };
-  const createPost = useSelector((state) => state.toggleSlice.createPost);
-  const [liked, setLiked] = useState(false);
-  const [comment, setComment] = useState("");
-  const [options, setOptions] = useState(false);
-  const [likeVal, setLikeVal] = useState(data?.likes?.length);
-  const [hide, setHide] = useState(false);
-
+  
   function getdetails() {
     fetch(`${base}/post/post-by-id/${data?._id}`, {
       method: "POST",
@@ -84,6 +84,7 @@ const PostCard = ({ index, data, text }) => {
         setLiked(true);
       });
   }
+
   function removeLike() {
     setLiked(false);
     fetch(`${base}/post/remove-like/${data?._id}`, {
@@ -126,9 +127,28 @@ const PostCard = ({ index, data, text }) => {
       },
     })
       .then((res) => res.json())
-      .then((data) => setHide(true));
+      .then((data) =>{ 
+        toast.success("Post deleted successfully"),
+        setHide(true)
+      });
   }
   }
+
+  const repost = (id) => {
+    fetch(`${base}/repost/${id}`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        toast.success("Post reposted successfully");
+      })
+      .catch((error) => {
+        toast.error(error)
+      });
+  };
 
   useEffect(() => {
     if (data?.likes?.includes(my?._id)) {
@@ -137,6 +157,7 @@ const PostCard = ({ index, data, text }) => {
       setLiked(false);
     }
   }, []);
+  
   return (
     <>
       <div
@@ -154,7 +175,6 @@ const PostCard = ({ index, data, text }) => {
                 <Link to={`/edit/${data?._id}`}>
                 <div 
                   className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-                  // onClick={() => editPost(data?._id)}
                 >
                   <BsPen /> Edit post
                 </div>
@@ -202,11 +222,8 @@ const PostCard = ({ index, data, text }) => {
           </div>
         )}
 
-        <div
-          className="flex justify-between bg-white p-3"
-          style={{ borderRadius: 8 + "px" }}
-        >
-          <Link to={`/profile/${data?.user?._id}`}>
+        
+            <div className="flex justify-between bg-white p-3 "  style={{ borderRadius: 10 + "px" }}>
             <div className="flex gap-3">
               <img
                 src={data?.user?.profile_url ? data?.user?.profile_url : avatar}
@@ -215,19 +232,17 @@ const PostCard = ({ index, data, text }) => {
               />
               <div>
                 <div className="text-sm max-sm:text-xs font-bold">
-                  {data?.user?.name}
+                  {data?.user?.name} 
                 </div>
                 <div className="text-xs max-sm:text-[11px] text-gray-500">
-                  {data?.user?.city}, {data?.user?.state}, {data?.user?.country}
+                  {data.user.city}, {data.user.state}, {data.user.country}
                 </div>
                 <div className="text-xs max-sm:text-[11px] text-gray-500">
-                  {data?.user?.category}
+                  {data.user.category}
                 </div>
               </div>
             </div>
-          </Link>
           <div className="flex text-xs items-center gap-3 text-gray-500">
-            {/* 6 Jan 2022{" "} */}
             <span className="font-normal text-gray-600 text-xs">2d </span>
             <BsThreeDots
               onClick={() => setOptions(!options)}
@@ -235,24 +250,18 @@ const PostCard = ({ index, data, text }) => {
             />
           </div>
         </div>
+        
+      
 
-        {data?.text && (
-          <Link to={`/post-details/${data?._id}`}>
-            <div className="bg-white text-sm pb-2 px-4">
-              <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
-            </div>
-          </Link>
-        )}
+        {data.text && (<div className="bg-white text-sm pb-2 px-4">
+          <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
+        </div>)}
 
-        {data?.asset_url && (
-          <Link to={`/post-details/${data?._id}`}>
-            <img
-              src={data?.asset_url}
-              className="w-full max-sm:h-[300px] h-[360px] object-cover cursor-pointer"
-              alt=""
-            />
-          </Link>
-        )}
+        {data.asset_url && ( <img
+          src={data.asset_url}
+          className="w-full h-[360px] object-cover cursor-pointer"
+          alt=""
+        />)}
 
         <div className="bg-white flex p-3 justify-between card-bottom">
           <div className="flex gap-8 max-sm:gap-6">
@@ -288,16 +297,20 @@ const PostCard = ({ index, data, text }) => {
               </div>
             </Link>
             
-            {/* <Link to={`/repost/${data?._id}`}> */}
-            <div  className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer">
+            {/* <Link to={`/repost/${data?._id}`}>  */}
+            <div  className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer"
+              onClick={() => repost(data?._id)}
+            >
               <BsRepeat size={18} />
               <div className="text-xs max-sm:text-[11px]">0</div>
             </div>
-            {/* </Link> */}
+            {/* </Link>  */}
             
-            <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-              <BsEye size={18} />
 
+            <div
+             className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+            >
+              <BsEye size={18} />
               <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import PeopleCard from "../components/PeopleCard";
 import PostCard from "../components/PostCard";
 import OrganzationCard from "../components/OrganizationCard";
@@ -16,13 +16,20 @@ import Videos from "@/components/Explore/Videos";
 
 const Explore = () => {
   
+  const [searchInput, setSearchInput] = useState("");
   const current = useSelector((state) => state.exploreSlice.current);
+  const navigate = useNavigate()
 
   const menu = {
     All: <All />,
     People: <People />,
     Posts: <Posts />,
     Videos: <Videos />,
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    navigate(`/search?query=${searchInput}`);
   };
 
 
@@ -32,14 +39,18 @@ const Explore = () => {
       <div className="hidden max-sm:flex bg-white items-center p-2 gap-3">
         {" "}
         <BsArrowLeft size={22} />
-        <input
-          type="text"
-          className="p-1.5 border rounded-full text-xs w-full outline-none"
-          placeholder="Search here.."
-        />
+        <form onSubmit={handleSearchSubmit}>
+            <input
+              type="text"
+              className="w-full p-1.5  outline-none border rounded-full text-sm"
+              placeholder="Search here..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            /> 
+          </form>
         <Drawer>
-          <DrawerTrigger>
-            <TbAdjustmentsHorizontal size={22} />
+          <DrawerTrigger >
+            <TbAdjustmentsHorizontal size={22} className="ml-16"/>
           </DrawerTrigger>
           <DrawerContent className="bg-white h-[300px] p-2">
             <div className="w-full h-full  flex flex-col justify-between">
@@ -100,7 +111,6 @@ const Explore = () => {
 
       <div className="w-[min(560px,96%)] mx-auto pt-4">
         {menu[current]}
-        
       </div>
     </div>
   );

@@ -13,8 +13,17 @@ import {
 import { MdBlock } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { changeMenu } from "../../redux/settingsSlice";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
+
+  const navigate = useNavigate()
+
+  function logout() {
+    localStorage.clear();
+    navigate("/");
+  }
+
   const menu = [
     {
       title: "Private account",
@@ -56,11 +65,6 @@ const Settings = () => {
       icon: <BsTrash />,
       action: "delete",
     },
-    {
-      title: "Logout",
-      icon: <BsPower />,
-      action:"logout"
-    },
   ];
 
   const dispatch = useDispatch();
@@ -84,8 +88,15 @@ const Settings = () => {
             </div>
           );
         })}
+        <div
+              onClick={() => logout()}
+              className="flex items-center gap-2 p-2 hover:bg-gray-200 cursor-pointer rounded-md"
+            >
+              <BsPower/> Logout
+            </div>
       </div>
     </div>
+
   );
 };
 

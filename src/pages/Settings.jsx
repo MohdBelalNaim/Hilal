@@ -9,7 +9,6 @@ import Activity from "../components/Settings/Activity";
 import MessagePrivacy from "../components/Settings/MessagePrivacy";
 import TagsAndMentions from "../components/Settings/TagsAndMentions";
 import DeleteAccount from "../components/Settings/DeleteAccount";
-import Logout from "@/components/Settings/Logout";
 
 const Settings = () => {
   const current = useSelector((state) => state.settingSlice.current);
@@ -22,7 +21,6 @@ const Settings = () => {
     activity: <Activity />,
     tag: <TagsAndMentions />,
     delete: <DeleteAccount />,
-    logout: <Logout/>
   };
   return (
     <div>
