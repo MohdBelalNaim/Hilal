@@ -3,10 +3,12 @@ import { BsFilter, BsHeart, BsThreeDotsVertical, BsX } from "react-icons/bs";
 import CommentCard from "./CommentCard";
 import { useDispatch, useSelector } from "react-redux";
 import { hideDetails, showDetails } from "../redux/toggleSlice";
+import notify from "../../utils/sendNotification";
 
 const PostDetails = () => {
   const base = useSelector((state) => state.userSlice.base_url);
-  const addComment = () => {
+  const addComment = async () => {
+    await notify(details?.user?._id, "comment", details?._id, base);
     fetch(`${base}/post/add-comment/${details._id}`, {
       method: "PUT",
       headers: {
@@ -31,7 +33,6 @@ const PostDetails = () => {
       .then((res) => res.json())
       .then((data) => {
         dispatch(showDetails(data?.data));
-        console.log(data?.data);
         setComment("");
       });
   }
@@ -102,5 +103,3 @@ const PostDetails = () => {
 };
 
 export default PostDetails;
-
-

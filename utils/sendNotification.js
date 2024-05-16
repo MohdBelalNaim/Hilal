@@ -1,8 +1,10 @@
-export default function notify(to, type, content, base) {
+export default async function notify(to, type, content, base) {
+  console.log(to, type, content, base);
   fetch(`${base}/notification/create`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      authorization: "Bearer " + localStorage.getItem("token"),
     },
     body: JSON.stringify({
       to,
@@ -13,9 +15,9 @@ export default function notify(to, type, content, base) {
     .then((res) => res.json())
     .then((data) => {
       if (data.error) {
-        return data.error;
+        console.log(data.error);
       } else {
-        return data.message;
+        console.log(data.message);
       }
     });
 }

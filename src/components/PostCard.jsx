@@ -15,21 +15,16 @@ import {
   BsTrash,
   BsX,
 } from "react-icons/bs";
-import { useDispatch, useSelector } from "react-redux";
-import { showDetails } from "../redux/toggleSlice";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { MdBlock } from "react-icons/md";
 import avatar from "../assets/images/avatar.jpeg";
 import { RWebShare } from "react-web-share";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
 import moment from "moment";
-
-import { FaShare } from "react-icons/fa";
 import { toast } from "sonner";
-
-
+import notify from "../../utils/sendNotification";
 const PostCard = ({ data }) => {
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
@@ -50,8 +45,9 @@ const PostCard = ({ data }) => {
       },
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then((mydata) => {
         setLiked(true);
+        notify(data?.user?._id, "Like", data?._id, base);
       });
   }
 
@@ -86,25 +82,29 @@ const PostCard = ({ data }) => {
         console.log(err);
       });
   }
-  
-  function repost() {
-    fetch(`${base}/post/create`, {
-      method: "POST",
-    });
+
+  async function copyToClipboard() {
+    const textToCopy = `${base}/post-details/${data?._id}`;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   }
 
   function deletePost(id) {
-  let confirmation = confirm("Are you sure you want to delete this Post?");
-  if (confirmation) {
-    fetch(`${base}/post/delete/${id}`, {
-      method: "POST",
-      headers: {
-        authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setHide(true));
-  }
+    setHide(true);
+    let confirmation = confirm("Are you sure you want to delete this Post?");
+    if (confirmation) {
+      fetch(`${base}/post/delete/${id}`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer " + localStorage.getItem("token"),
+        },
+      });
+    }
   }
 
   useEffect(() => {
@@ -123,176 +123,184 @@ const PostCard = ({ data }) => {
         className=" mb-5 relative max-sm:mb-2"
         style={{ borderRadius: 10 + "px" }}
       >
-      <div className={`${hide && "hidden"} relative`}>
-        {options && (
-          <div
-            className="bg-white overflow-hidden z-[99] absolute text-sm border shadow rounded-md right-2 top-14"
-            style={{ borderRadius: 10 + "px" }}
-          >
-            {data?.user?._id == my?._id ? (
-              <>
-                <Link to={`/edit/${data?._id}`}>
-                <div 
-                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-                  // onClick={() => editPost(data?._id)}
-                >
-                  <BsPen /> Edit post
-                </div>
-                </Link>
-                
-                <div 
-                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-                  onClick={() => deletePost(data?._id)}
-                >
-                  <BsTrash /> Delete post
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsShare /> Share post
-                </div>
-              </>
-            ) : (
-              <>
-                <div
-                  onClick={savePost}
-                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
-                >
-                  <BsBookmark /> Save post
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsLink /> Copy link
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsExclamationCircle /> Report
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <MdBlock /> Block user
-                </div>
-                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
-                  <BsPerson /> Follow user
-                </div>
-              </>
-            )}
-
+        <div className={`${hide && "hidden"} relative`}>
+          {options && (
             <div
-              onClick={() => setOptions(!options)}
-              className="py-1.5 max-sm:text-xs px-3 flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+              className="bg-white overflow-hidden z-[99] absolute text-sm border shadow rounded-md right-2 top-14"
+              style={{ borderRadius: 10 + "px" }}
             >
-              <BsX /> Close
-            </div>
-          </div>
-        )}
+              {data?.user?._id == my?._id ? (
+                <>
+                  <Link to={`/edit/${data?._id}`}>
+                    <div
+                      className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                      // onClick={() => editPost(data?._id)}
+                    >
+                      <BsPen /> Edit post
+                    </div>
+                  </Link>
 
-        <div
-          className="flex justify-between bg-white p-3"
-          style={{ borderRadius: 8 + "px" }}
-        >
-          <Link to={`/profile/${data?.user?._id}`}>
-            <div className="flex gap-3">
-              <img
-                src={data?.user?.profile_url ? data?.user?.profile_url : avatar}
-                className="size-12 max-sm:size-10 rounded-full"
-                alt=""
-              />
-              <div>
-                <div className="text-sm max-sm:text-xs font-bold">
-                  {data?.user?.name}
-                </div>
-                <div className="text-xs max-sm:text-[11px] text-gray-500">
-                  {data?.user?.city}, {data?.user?.state}, {data?.user?.country}
-                </div>
-                <div className="text-xs max-sm:text-[11px] text-gray-500">
-                  {data?.user?.category}
-                </div>
-              </div>
-            </div>
-          </Link>
-          <div className="flex text-xs items-center gap-3 text-gray-500">
-            {/* 6 Jan 2022{" "} */}
-            <span className="font-normal text-gray-600 text-xs">{date} </span>
-            <BsThreeDots
-              onClick={() => setOptions(!options)}
-              className="cursor-pointer max-sm:text-xs"
-            />
-          </div>
-        </div>
+                  <div
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                    onClick={() => deletePost(data?._id)}
+                  >
+                    <BsTrash /> Delete post
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <BsShare /> Share post
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    onClick={savePost}
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  >
+                    <BsBookmark /> Save post
+                  </div>
+                  <div
+                    onClick={copyToClipboard}
+                    className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  >
+                    <BsLink /> Copy link
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <BsExclamationCircle /> Report
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <MdBlock /> Block user
+                  </div>
+                  <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                    <BsPerson /> Follow user
+                  </div>
+                </>
+              )}
 
-        {data?.text && (
-          <Link to={`/post-details/${data?._id}`}>
-            <div className="bg-white text-sm pb-2 px-4">
-              <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
-            </div>
-          </Link>
-        )}
-
-        {data?.asset_url && (
-          <Link to={`/post-details/${data?._id}`}>
-            <img
-              src={data?.asset_url}
-              className="w-full max-sm:h-[300px] h-[360px] object-cover cursor-pointer"
-              alt=""
-            />
-          </Link>
-        )}
-
-        <div className="bg-white flex p-3 justify-between card-bottom">
-          <div className="flex gap-8 max-sm:gap-6">
-            {liked ? (
               <div
-                onClick={removeLike}
-                className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                onClick={() => setOptions(!options)}
+                className="py-1.5 max-sm:text-xs px-3 flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
               >
-                <BsHeartFill size={18} className="text-red-500" />
-
-                <div className="text-xs max-sm:text-[11px]">{likeVal + 1}</div>
+                <BsX /> Close
               </div>
-            ) : (
-              <div
-                onClick={addLike}
-                className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
-              >
-                <BsHeart size={18} />
+            </div>
+          )}
 
-                <div className="text-xs max-sm:text-[11px]">
-                  {data?.likes?.length}
-                </div>
-              </div>
-            )}
-
-            <Link to={`/post-details/${data?._id}`}>
-              <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-                <BsChat size={18} />
-
-                <div className="text-xs max-sm:text-[10px]">
-                  {data?.comments?.length}
+          <div
+            className="flex justify-between bg-white p-3"
+            style={{ borderRadius: 8 + "px" }}
+          >
+            <Link to={`/profile/${data?.user?._id}`}>
+              <div className="flex gap-3">
+                <img
+                  src={
+                    data?.user?.profile_url ? data?.user?.profile_url : avatar
+                  }
+                  className="size-12 max-sm:size-10 rounded-full"
+                  alt=""
+                />
+                <div>
+                  <div className="text-sm max-sm:text-xs font-bold">
+                    {data?.user?.name}
+                  </div>
+                  <div className="text-xs max-sm:text-[11px] text-gray-500">
+                    {data?.user?.city}, {data?.user?.state},{" "}
+                    {data?.user?.country}
+                  </div>
+                  <div className="text-xs max-sm:text-[11px] text-gray-500">
+                    {data?.user?.category}
+                  </div>
                 </div>
               </div>
             </Link>
-
-            {/* <Link to={`/repost/${data?._id}`}> */}
-            <div className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer">
-              <BsRepeat size={18} />
-              <div className="text-xs max-sm:text-[11px]">0</div>
-            </div>
-            {/* </Link> */}
-
-            <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
-              <BsEye size={18} />
-
-              <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
+            <div className="flex text-xs items-center gap-3 text-gray-500">
+              {/* 6 Jan 2022{" "} */}
+              <span className="font-normal text-gray-600 text-xs">{date} </span>
+              <BsThreeDots
+                onClick={() => setOptions(!options)}
+                className="cursor-pointer max-sm:text-xs"
+              />
             </div>
           </div>
 
-          <RWebShare
-            data={{
-              text: "Check this post on HilalLink",
-              url: "https://hilal-one.vercel.app",
-              title: "Share this post",
-            }}
-            onClick={() => console.log("shared successfully!")}
-          >
-            <BsShare className="max-sm:text-xs" />
-          </RWebShare>
-        </div>
+          {data?.text && (
+            <Link to={`/post-details/${data?._id}`}>
+              <div className="bg-white text-sm pb-2 px-4">
+                <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
+              </div>
+            </Link>
+          )}
+
+          {data?.asset_url && (
+            <Link to={`/post-details/${data?._id}`}>
+              <img
+                src={data?.asset_url}
+                className="w-full max-sm:h-[300px] h-[360px] object-cover cursor-pointer"
+                alt=""
+              />
+            </Link>
+          )}
+
+          <div className="bg-white flex p-3 justify-between card-bottom">
+            <div className="flex gap-8 max-sm:gap-6">
+              {liked ? (
+                <div
+                  onClick={removeLike}
+                  className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                >
+                  <BsHeartFill size={18} className="text-red-500" />
+
+                  <div className="text-xs max-sm:text-[11px]">
+                    {likeVal + 1}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={addLike}
+                  className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+                >
+                  <BsHeart size={18} />
+
+                  <div className="text-xs max-sm:text-[11px]">
+                    {data?.likes?.length}
+                  </div>
+                </div>
+              )}
+
+              <Link to={`/post-details/${data?._id}`}>
+                <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+                  <BsChat size={18} />
+
+                  <div className="text-xs max-sm:text-[10px]">
+                    {data?.comments?.length}
+                  </div>
+                </div>
+              </Link>
+
+              {/* <Link to={`/repost/${data?._id}`}> */}
+              <div className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer">
+                <BsRepeat size={18} />
+                <div className="text-xs max-sm:text-[11px]">0</div>
+              </div>
+              {/* </Link> */}
+
+              <div className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1">
+                <BsEye size={18} />
+
+                <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
+              </div>
+            </div>
+
+            <RWebShare
+              data={{
+                text: "Check this post on HilalLink",
+                url: "https://hilal-one.vercel.app",
+                title: "Share this post",
+              }}
+              onClick={() => console.log("shared successfully!")}
+            >
+              <BsShare className="max-sm:text-xs" />
+            </RWebShare>
+          </div>
         </div>
       </div>
     </>
