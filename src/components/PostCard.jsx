@@ -28,13 +28,13 @@ import notify from "../../utils/sendNotification";
 const PostCard = ({ data }) => {
   const base = useSelector((state) => state.userSlice.base_url);
   const my = useSelector((state) => state.userSlice.user);
-
+  const createPost = useSelector((state) => state.toggleSlice.createPost);
   const [liked, setLiked] = useState(false);
+  const [comment, setComment] = useState("");
   const [options, setOptions] = useState(false);
   const [likeVal, setLikeVal] = useState(data?.likes?.length);
-
-  const [date, setDate] = useState([]);
   const [hide, setHide] = useState(false);
+
 
   function addLike() {
     setLiked(true);
@@ -83,6 +83,22 @@ const PostCard = ({ data }) => {
       });
   }
 
+
+  function deletePost(id) {
+  let confirmation = confirm("Are you sure you want to delete this Post?");
+  if (confirmation) {
+    fetch(`${base}/post/delete/${id}`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) =>{ 
+        toast.success("Post deleted successfully"),
+        setHide(true)
+      });
+
   async function copyToClipboard() {
     const textToCopy = `${base}/post-details/${data?._id}`;
 
@@ -92,6 +108,7 @@ const PostCard = ({ data }) => {
     } catch (err) {
       console.error("Failed to copy:", err);
     }
+
   }
 
   function deletePost(id) {
@@ -106,6 +123,22 @@ const PostCard = ({ data }) => {
       });
     }
   }
+
+  const repost = (id) => {
+    fetch(`${base}/repost/${id}`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        toast.success("Post reposted successfully");
+      })
+      .catch((error) => {
+        toast.error(error)
+      });
+  };
 
   useEffect(() => {
     if (data?.likes?.includes(my?._id)) {
@@ -189,26 +222,26 @@ const PostCard = ({ data }) => {
             className="flex justify-between bg-white p-3"
             style={{ borderRadius: 8 + "px" }}
           >
-            <Link to={`/profile/${data?.user?._id}`}>
-              <div className="flex gap-3">
-                <img
-                  src={
-                    data?.user?.profile_url ? data?.user?.profile_url : avatar
-                  }
-                  className="size-12 max-sm:size-10 rounded-full"
-                  alt=""
-                />
-                <div>
-                  <div className="text-sm max-sm:text-xs font-bold">
-                    {data?.user?.name}
-                  </div>
-                  <div className="text-xs max-sm:text-[11px] text-gray-500">
-                    {data?.user?.city}, {data?.user?.state},{" "}
-                    {data?.user?.country}
-                  </div>
-                  <div className="text-xs max-sm:text-[11px] text-gray-500">
-                    {data?.user?.category}
-                  </div>
+
+            {data?.user?._id == my?._id ? (
+              <>
+                <Link to={`/edit/${data?._id}`}>
+                <div 
+                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                >
+                  <BsPen /> Edit post
+                </div>
+                </Link>
+                
+                <div 
+                  className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 "
+                  onClick={() => deletePost(data?._id)}
+                >
+                  <BsTrash /> Delete post
+                </div>
+                <div className="py-1.5 max-sm:text-xs px-3 border-b flex items-center gap-3 cursor-pointer hover:bg-gray-200 ">
+                  <BsShare /> Share post
+
                 </div>
               </div>
             </Link>
@@ -221,6 +254,10 @@ const PostCard = ({ data }) => {
               />
             </div>
           </div>
+
+        
+            <div className="flex justify-between bg-white p-3 "  style={{ borderRadius: 10 + "px" }}>
+            <div className="flex gap-3">
 
           {data?.text && (
             <Link to={`/post-details/${data?._id}`}>
@@ -237,6 +274,39 @@ const PostCard = ({ data }) => {
                 className="w-full max-sm:h-[300px] h-[360px] object-cover cursor-pointer"
                 alt=""
               />
+              <div>
+                <div className="text-sm max-sm:text-xs font-bold">
+                  {data?.user?.name} 
+                </div>
+                <div className="text-xs max-sm:text-[11px] text-gray-500">
+                  {data.user.city}, {data.user.state}, {data.user.country}
+                </div>
+                <div className="text-xs max-sm:text-[11px] text-gray-500">
+                  {data.user.category}
+                </div>
+              </div>
+            </div>
+          <div className="flex text-xs items-center gap-3 text-gray-500">
+            <span className="font-normal text-gray-600 text-xs">2d </span>
+            <BsThreeDots
+              onClick={() => setOptions(!options)}
+              className="cursor-pointer max-sm:text-xs"
+            />
+          </div>
+        </div>
+        
+      
+
+        {data.text && (<div className="bg-white text-sm pb-2 px-4">
+          <Markdown remarkPlugins={[remarkGfm]}>{data?.text}</Markdown>
+        </div>)}
+
+        {data.asset_url && ( <img
+          src={data.asset_url}
+          className="w-full h-[360px] object-cover cursor-pointer"
+          alt=""
+        />)}
+
             </Link>
           )}
 
@@ -288,6 +358,26 @@ const PostCard = ({ data }) => {
 
                 <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
               </div>
+
+            </Link>
+            
+            {/* <Link to={`/repost/${data?._id}`}>  */}
+            <div  className="flex text-sm text-gray-500 items-center gap-2 max-sm:gap-1 cursor-pointer"
+              onClick={() => repost(data?._id)}
+            >
+              <BsRepeat size={18} />
+              <div className="text-xs max-sm:text-[11px]">0</div>
+            </div>
+            {/* </Link>  */}
+            
+
+            <div
+             className="flex text-sm text-gray-500  items-center gap-2 max-sm:gap-1"
+            >
+              <BsEye size={18} />
+              <div className="text-xs max-sm:text-[11px]">{data?.views}</div>
+            </div>
+
             </div>
 
             <RWebShare
@@ -300,6 +390,7 @@ const PostCard = ({ data }) => {
             >
               <BsShare className="max-sm:text-xs" />
             </RWebShare>
+
           </div>
         </div>
       </div>

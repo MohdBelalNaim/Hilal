@@ -14,10 +14,10 @@ import Cropper from "react-easy-crop";
 import getCroppedImg from "../../utils/crop";
 import { MDXEditor } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
-
+import { TailSpin } from "react-loader-spinner";
 import { toast } from "sonner";
 import { LuRectangleHorizontal, LuRectangleVertical } from "react-icons/lu";
-import { TailSpin } from "react-loader-spinner";
+
 const CreatePost = () => {
   const dispatch = useDispatch();
   const [uploadImage, setUploadImage] = useState(null);
@@ -32,15 +32,16 @@ const CreatePost = () => {
   const [aspectMenu, setAspectMenu] = useState(false);
   const [loading, setLoading] = useState(false);
   const editorRef = useRef("");
+  const [load, setLoad] = useState(false);
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  function handleChange() {
-    setText(editorRef.current.getMarkdown());
-    console.log(editorRef.current.getMarkdown());
-  }
+  const handleChange = () => {
+    const markdown = editorRef.current.getMarkdown();
+    setText(markdown);
+  };
 
   const handelSave = useCallback(async () => {
     try {
@@ -78,12 +79,16 @@ const CreatePost = () => {
   };
 
   const base = useSelector((state) => state.userSlice.base_url);
+  async function savePost() {
+    setLoad(true);
+
   async function savePost(imgfile) {
     if (text == "" && uploadImage == "") {
       toast.error("Post cannot be empty!");
       return;
     }
     setLoading(true);
+
     await fetch(`${base}/post/create`, {
       method: "POST",
       headers: {
@@ -106,6 +111,9 @@ const CreatePost = () => {
           toast.error(data.error);
           setLoading(false);
         }
+      })
+      .finally(() => {
+        setLoad(false);
       });
   }
 
@@ -153,20 +161,13 @@ const CreatePost = () => {
             ref={editorRef}
             markdown=""
             placeholder="Bismillah! What's on your mind, write here.."
+            readOnly={text.length >= 200} 
             className="mt-4 mb-12"
           />
-          {/* <textarea
-            placeholder="Bismillah! What's on your mind, write here.."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            name=""
-            id=""
-            className="w-full outline-none text-lg mt-5 max-sm:text-sm z-50"
-            cols="30"
-            rows="3"
-            maxLength={250}
-          ></textarea> */}
-
+          <div className="my-3 ml-3 max-sm:text-sm text-gray-400">
+            Characters: {text.length}/200
+          </div>
+          
           <div className={`${uploadImage && "h-[300px]"} relative mt-3`}>
             {uploadImage && (
               <>
@@ -243,22 +244,20 @@ const CreatePost = () => {
             <BsThreeDots className="text-blue-500" />
           </div>
           <div className="flex items-center gap-4">
-            {loading ? (
-              <button
-                onClick={savePost}
-                className="bg-primary text-sm w-max py-1 rounded-full max-sm:text-xs opacity-55 cursor-not-allowed"
-                disabled
-              >
-                <TailSpin height={20} color="white" />
-              </button>
-            ) : (
-              <button
-                onClick={handelSave}
-                className="bg-primary text-sm py-1 px-4 rounded-full max-sm:text-xs"
-              >
-                Post
-              </button>
-            )}
+            <button
+              disabled={load}
+              onClick={savePost}
+              className={`text-sm py-1 px-4 rounded-full max-sm:text-xs ${
+                load ? "bg-blue-200" : "bg-primary"
+              } grid place-items-center w-full disabled:cursor-not-allowed`}
+            >
+              {load ? (
+                <TailSpin height={20} width={20} color="white" />
+              ) : (
+                "Post"
+              )}
+            </button>
+
           </div>
         </div>
       </div>

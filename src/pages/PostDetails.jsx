@@ -45,6 +45,7 @@ const PostDetails = () => {
         setComment("");
       });
   };
+
   function getdetails() {
     setLoading(true);
     fetch(`${base}/post/post-by-id/${id}`, {
@@ -61,6 +62,7 @@ const PostDetails = () => {
         setLoading(false);
       });
   }
+
   function addLike() {
     setLiked(true);
     fetch(`${base}/post/add-like/${details?._id}`, {
@@ -74,6 +76,7 @@ const PostDetails = () => {
         console.log("Liked");
       });
   }
+
   function removeLike() {
     setLiked(false);
     fetch(`${base}/post/remove-like/${details?._id}`, {
@@ -85,9 +88,20 @@ const PostDetails = () => {
       .then((res) => res.json())
       .then((data) => console.log("Unliked"));
   }
+
+  function viewupdate(){
+    fetch(`${base}/post/update-views/${id}`,{
+      method:"GET"
+    })
+    .then((res) => res.json())
+    .then((data) => console.log(data.success));
+  }
+
   useEffect(() => {
+    viewupdate();
     getdetails();
   }, []);
+
   return (
     <div>
       {loading && <FullScreenLoader />}

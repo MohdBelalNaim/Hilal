@@ -46,7 +46,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/edit/:id" element={<EditPost />} />
 
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/signup" element={<Signup />} />
@@ -72,6 +71,8 @@ function App() {
         <Route path="/post-details/:id" element={<PostDetails />} />
 
         <Route path="/search" element={<Search />} />
+
+        <Route path="/edit/:id" element={<EditPost />} />
 
         <Route path="/mobile/account-privacy" element={<AccountPrivacy />} />
         <Route path="/mobile/change-password" element={<ChangePassword />} />

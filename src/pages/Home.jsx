@@ -10,6 +10,7 @@ import MobileNavbar from "@/components/MobileNavbar";
 import { TailSpin } from "react-loader-spinner";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import RepostCard from "@/components/RepostedCard";
 
 const Home = () => {
   const base = useSelector((state) => state.userSlice.base_url);
@@ -68,8 +69,14 @@ const Home = () => {
                 <TailSpin height={52} color="dodgerblue" />
               </div>
             ) : (
-              posts.map((item, index) => <PostCard key={index} data={item} />)
+              <div>
+              {posts.map((item, index) => (
+                item.original_user ? <RepostCard key={index} data={item} /> : <PostCard data={item} key={index} />
+              ))}
+              
+              </div>
             )}
+            
           </div>
         </div>
         <div className="max-sm:hidden">

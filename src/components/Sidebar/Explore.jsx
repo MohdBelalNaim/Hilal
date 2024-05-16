@@ -22,14 +22,12 @@ const Explore = () => {
           <form onSubmit={handleSearchSubmit}>
             <input
               type="text"
-              className="w-full px-2 outline-none"
+              className="w-full px-2 outline-none text-sm"
               placeholder="Search here..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-
           </form>
-          
         </div>
       </div>
       <div className="p-4 w-[320px] grid gap-y-4">
